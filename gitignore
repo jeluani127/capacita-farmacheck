@@ -1,0 +1,14 @@
+# Credenciales y datos sensibles — NUNCA subir a GitHub
+.env
+credentials.json
+usuarios.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# macOS
+.DS_Store

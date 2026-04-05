@@ -1,0 +1,7 @@
+python-telegram-bot==22.7
+anthropic
+gspread
+google-auth
+google-auth-oauthlib
+python-dotenv
+apscheduler
