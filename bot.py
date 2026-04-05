@@ -15,6 +15,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import anthropic
 import base64
 import json
+import tempfile
 from datetime import datetime
 
 # ============================================================
@@ -419,16 +420,33 @@ El código expira en 10 minutos.
 # ============================================================
 # FUNCION GOOGLE SHEETS
 # ============================================================
+def obtener_credenciales_google():
+    """Obtiene credenciales de Google desde variable de entorno o archivo local."""
+    scopes = [
+        'https://spreadsheets.google.com/feeds',
+        'https://www.googleapis.com/auth/drive'
+    ]
+    # Primero intenta desde variable de entorno (Railway)
+    creds_b64 = os.getenv('GOOGLE_CREDENTIALS_B64')
+    if creds_b64:
+        creds_json = base64.b64decode(creds_b64).decode('utf-8')
+        creds_dict = json.loads(creds_json)
+        return Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    # Si no, usa el archivo local (desarrollo en Mac)
+    if os.path.exists(GOOGLE_CREDENTIALS_FILE):
+        return Credentials.from_service_account_file(GOOGLE_CREDENTIALS_FILE, scopes=scopes)
+    return None
+
 def registrar_en_sheets(datos, evento, detalle=""):
     try:
-        if not os.path.exists(GOOGLE_CREDENTIALS_FILE):
-            logger.warning("credentials.json no encontrado — omitiendo Sheets")
+        creds = obtener_credenciales_google()
+        if not creds:
+            logger.warning("Credenciales de Google no encontradas — omitiendo Sheets")
             return False
         scopes = [
             'https://spreadsheets.google.com/feeds',
             'https://www.googleapis.com/auth/drive'
         ]
-        creds = Credentials.from_service_account_file(GOOGLE_CREDENTIALS_FILE, scopes=scopes)
         client = gspread.authorize(creds)
         sheet = client.open_by_key(GOOGLE_SHEETS_ID).sheet1
         fila = [
